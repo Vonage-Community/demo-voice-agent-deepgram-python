@@ -15,7 +15,7 @@ Caller dials Vonage number
     → Transcripts log to terminal in real time
     → Caller interrupts → UserStartedSpeaking → CLEAR → barge-in
 ```
-The demo agent is **Pugsley** — a pug expert who answers questions about pugs, helps callers decide if a pug is right for them, and looks up local pug rescue organizations by zip code using function calling.
+The demo agent is prompted with **Pugsley**, a pug expert who answers questions about pugs, helps callers decide if a pug is right for them, and looks up local pug rescue organizations by zip code using function calling.
 
 ### The endpoints
 
