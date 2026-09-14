@@ -17,7 +17,7 @@ Caller dials Vonage number
 ```
 The demo agent is prompted with **Pugsley**, a pug expert who answers questions about pugs, helps callers decide if a pug is right for them, and looks up local pug rescue organizations by zip code using function calling.
 
-### The endpoints
+### Endpoints
 
 | Method | Path | Description |
 |---|---|---|
@@ -25,7 +25,7 @@ The demo agent is prompted with **Pugsley**, a pug expert who answers questions 
 | `POST` | `/event` | Vonage call status events |
 | `WS` | `/socket` | Bidirectional audio bridge (Vonage ↔ Deepgram) |
 
-### The architecture
+### Architecture
 
 The server maintains two concurrent WebSocket connections per call, managed by a `CallState` dataclass that tracks shared state:
 
