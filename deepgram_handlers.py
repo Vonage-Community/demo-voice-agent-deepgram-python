@@ -4,9 +4,10 @@ import logging
 from vonage import Vonage, Auth
 import websockets
 from fastapi import WebSocket
-from config import VONAGE_APPLICATION_ID, VONAGE_PRIVATE_KEY_PATH
+from config import VONAGE_APPLICATION_ID, VONAGE_PRIVATE_KEY_PATH, LogColor
 from call_state import CallState
 from dog_rescue_data import PUG_RESCUES_BY_REGION, DEFAULT_RESCUES
+
 
 # Logging
 logging.basicConfig(
@@ -39,16 +40,16 @@ async def find_pug_rescues(zip_code: str) -> str:
     ]
     summary = "; ".join(lines)
 
-    return (
-        f"Great news! I found {len(rescues)} pug rescue organizations near {zip_code}: "
-        f"{summary}. I'd recommend calling ahead — availability changes quickly, "
-        "and they can tell you about any pugs coming in soon too."
-    )
+    pug_rescue_result = f"Great news! I found {len(rescues)} pug rescue organizations near {zip_code}: "
+    f"{summary}. I'd recommend calling ahead — availability changes quickly, "
+    "and they can tell you about any pugs coming in soon too."
+
+    return pug_rescue_result
 
 
 async def dispatch_function_call(
     fn: dict,
-    dg_ws,
+    deepgram_ws,
     vonage_voice,
     original_uuid: str,
     state: CallState,
@@ -60,7 +61,7 @@ async def dispatch_function_call(
     """
     fn_name = fn.get("name")
     fn_id = fn.get("id")
-    logger.info(f"Function call: {fn_name} | args: {fn.get('arguments')}")
+    logger.info(LogColor.wrap(LogColor.YELLOW,f"Function call: {fn_name} | args: {fn.get('arguments')}"))
 
     if fn_name == "find_pug_rescues":
         args = json.loads(fn.get("arguments", "{}"))
@@ -69,19 +70,19 @@ async def dispatch_function_call(
         logger.info(f"Rescue lookup result: {result}")
 
     elif fn_name == "end_call":
-        # Defer the FunctionCallResponse until AgentAudioDone fires.
-        # Sending it now would trigger a new LLM turn → repeated farewell.
+        # Defer the FunctionCallResponse until AgentAudioDone fires
+        # Sending it now would trigger a new LLM turn → repeated farewell
         state.ending_call = True
         state.end_call_fn_id = fn_id
-        logger.info(
+        logger.info(LogColor.wrap(LogColor.YELLOW,
             "end_call invoked — deferring FunctionCallResponse until AgentAudioDone"
-        )
+        ))
         return  # skip the send below
 
     else:
         result = "Function not implemented."
 
-    await dg_ws.send(
+    await deepgram_ws.send(
         json.dumps(
             {
                 "type": "FunctionCallResponse",
@@ -94,7 +95,7 @@ async def dispatch_function_call(
 
 
 async def handle_deepgram(
-    dg_ws,
+    deepgram_ws,
     vonage_ws: WebSocket,
     original_uuid: str,
     state: CallState,
@@ -108,34 +109,39 @@ async def handle_deepgram(
       - FunctionCallRequest → dispatch to find_pug_rescues or end_call
     """
     try:
-        async for message in dg_ws:
+        async for message in deepgram_ws:
 
             if isinstance(message, bytes):
-                # Raw PCM audio from the AI agent.
+                # Raw PCM audio from the AI agent
                 # farewell_done blocks any audio after the farewell has played,
-                # preventing a repeated farewell during the hangup window.
-                if not state.farewell_done:
+                # preventing a repeated farewell during the hangup window
+                if not state.farewell_complete:
                     await vonage_ws.send_bytes(message)
 
             else:
                 data = json.loads(message)
-                logger.info(f"Deepgram -> {data}")
+                if data.get("role") == "assistant":
+                    logger.info(LogColor.wrap(LogColor.GREEN,f"Deepgram -> {data}"))
+                elif data.get("role") == "user":
+                    logger.info(LogColor.wrap(LogColor.MAGENTA,f"Deepgram -> {data}"))
+                # else:
+                #     logger.info(f"Deepgram -> {data}")
 
                 event_type = data.get("type")
 
                 if event_type == "UserStartedSpeaking":
-                    # Barge-in: caller interrupted the agent mid-response.
-                    # Tell Vonage to discard its audio buffer immediately.
+                    # Barge-in: caller interrupted the agent mid-response
+                    # Tell Vonage to discard its audio buffer immediately
                     await vonage_ws.send_text(json.dumps({"action": "clear"}))
-                    logger.info("CLEAR sent to Vonage (barge-in)")
+                    logger.info(LogColor.wrap(LogColor.RED,"CLEAR sent to Vonage (barge-in)"))
 
                 elif event_type == "AgentAudioDone":
                     if state.ending_call and original_uuid:
-                        # Farewell TTS has finished playing.
-                        # Send the deferred FunctionCallResponse then hang up.
-                        state.farewell_done = True
+                        # Farewell TTS has finished playing
+                        # Send the deferred FunctionCallResponse then hang up
+                        state.farewell_complete = True
                         if state.end_call_fn_id:
-                            await dg_ws.send(
+                            await deepgram_ws.send(
                                 json.dumps(
                                     {
                                         "type": "FunctionCallResponse",
@@ -145,9 +151,9 @@ async def handle_deepgram(
                                     }
                                 )
                             )
-                        logger.info(
+                        logger.info(LogColor.wrap(LogColor.YELLOW,
                             f"AgentAudioDone + ending_call — hanging up | UUID: {original_uuid}"
-                        )
+                        ))
                         await asyncio.sleep(2)
                         try:
                             vonage_voice.hangup(original_uuid)
@@ -158,9 +164,9 @@ async def handle_deepgram(
                 elif event_type == "FunctionCallRequest":
                     for fn in data.get("functions", []):
                         await dispatch_function_call(
-                            fn, dg_ws, vonage_voice, original_uuid, state
+                            fn, deepgram_ws, vonage_voice, original_uuid, state
                         )
 
     except websockets.exceptions.ConnectionClosed:
-        logger.info("Deepgram WS closed.")
-        state.dg_ws_open = False
+        logger.info("Deepgram WebSocket closed.")
+        state.deepgram_websocket_open = False

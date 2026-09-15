@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
 
+# Environment variables
 # Load and assign environment variables to be imported throughout application
-
 load_dotenv()
 
 # Vonage
@@ -16,4 +16,19 @@ DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 DEEPGRAM_VOICE_AGENT_ENDPOINT = os.getenv(
     "DEEPGRAM_VOICE_AGENT_ENDPOINT", "agent.deepgram.com/v1/agent/converse"
 )
-DEEPGRAM_AGENT_SPEAK = os.getenv("DEEPGRAM_AGENT_SPEAK", "aura-orion-en")
+
+
+# Logging colors
+# Used for color coding logs for demonstration purposes
+class LogColor:
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    CYAN = "\033[36m"
+    MAGENTA = "\033[35m"
+    GREY = "\033[37m"
+    RESET = "\033[0m"
+
+    @classmethod
+    def wrap(cls, color: str, msg: str) -> str:
+        return f"{color}{msg}{cls.RESET}"

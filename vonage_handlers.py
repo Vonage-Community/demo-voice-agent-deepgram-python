@@ -1,20 +1,15 @@
-import vonage
 import json
 from vonage import Vonage, Auth
 from vonage_voice import (
-    CreateCallRequest,
-    Phone,
-    ToPhone,
     NccoAction,
     Talk,
     Connect,
     WebsocketEndpoint,
-    TtsStreamOptions,
 )
 from fastapi.responses import JSONResponse
 from fastapi import WebSocket, WebSocketDisconnect
 import logging
-from config import VONAGE_APPLICATION_ID, VONAGE_PRIVATE_KEY_PATH
+from config import LogColor
 from call_state import CallState
 
 # Logging
@@ -23,15 +18,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-vonage_client = Vonage(
-    Auth(
-        application_id=VONAGE_APPLICATION_ID,
-        private_key=VONAGE_PRIVATE_KEY_PATH,
-    )
-)
-VONAGE_VOICE = vonage_client.voice
-
 
 def build_ncco(host: str, uuid: str, from_: str) -> list:
     """
@@ -57,11 +43,11 @@ def build_ncco(host: str, uuid: str, from_: str) -> list:
         Connect(endpoint=[websocket_endpoint], from_=from_),
     ]
 
-    logger.info(f"Inbound call answered. UUID: {uuid}. WebSocket URI: {ws_uri}")
+    logger.info(f"Inbound call answered | UUID: {uuid} | WebSocket URI: {ws_uri}")
     return [action.model_dump(by_alias=True, exclude_none=True) for action in ncco]
 
 
-async def handle_vonage(vonage_ws: WebSocket, dg_ws, state: CallState,) -> None:
+async def handle_vonage(vonage_ws: WebSocket, deepgram_ws, state: CallState,) -> None:
     """
     Loop 2: Vonage → Deepgram
 
@@ -81,22 +67,22 @@ async def handle_vonage(vonage_ws: WebSocket, dg_ws, state: CallState,) -> None:
                 # Control event from Vonage (not audio)
                 evt = json.loads(message["text"])
                 kind = evt.get("event", "")
-                logger.info(f"Vonage event: {kind}")
+                logger.info(LogColor.wrap(LogColor.YELLOW, f"Vonage event: {kind}"))
 
                 if kind == "websocket:connected":
-                    logger.info(
-                        f"Vonage WS ready | " f"content-type: {evt.get('content-type')}"
-                    )
+                    logger.info(LogColor.wrap(LogColor.CYAN,
+                        f"Vonage WebSocket ready | " f"content-type: {evt.get('content-type')}"
+                    ))
                 elif kind == "websocket:cleared":
-                    logger.info("Vonage buffer cleared (barge-in confirmed)")
+                    logger.info(LogColor.wrap(LogColor.RED, "Vonage buffer cleared (barge-in confirmed)"))
 
             elif "bytes" in message:
-                # Raw PCM audio from the caller — forward to Deepgram.
+                # Raw PCM audio from the caller — forward to Deepgram
                 # Once ending_call is set, stop sending caller audio so
                 # Deepgram can't trigger another LLM turn during the
-                # sleep window before hangup.
-                if state.dg_ws_open and not state.ending_call:
-                    await dg_ws.send(message["bytes"])
+                # sleep window before hangup
+                if state.deepgram_websocket_open and not state.ending_call:
+                    await deepgram_ws.send(message["bytes"])
 
     except WebSocketDisconnect:
-        logger.info("Vonage WS disconnected.")
+        logger.info("Vonage WebSocket disconnected")

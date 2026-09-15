@@ -1,5 +1,3 @@
-from config import DEEPGRAM_AGENT_SPEAK
-
 # Deepgram Voice Agent Settings
 
 # Sent once on WebSocket open to configure ASR, LLM, and TTS.
@@ -13,12 +11,14 @@ DG_AGENT_SETTINGS = {
     },
     "agent": {
         "listen": {
-            "provider": {"type": "deepgram", "model": "nova-3"},
+            "provider": {"type": "deepgram", 
+                         "model": "flux-general-en",
+                         "version": "v2"},
         },
         "think": {
             "provider": {
                 "type":  "anthropic",
-                "model": "claude-haiku-4-5",
+                "model": "claude-sonnet-5",
             },
             "prompt": (
                 "You are Pugsley, a friendly and enthusiastic pug expert on a live phone call. "
@@ -81,7 +81,9 @@ DG_AGENT_SETTINGS = {
             ],
         },
         "speak": {
-            "provider": {"type": "deepgram", "model": DEEPGRAM_AGENT_SPEAK},
+            "provider": {"type": "deepgram",
+                         "model": "flux-kit-en",
+                         "version": "v2"},
         },
         "greeting": "Hello! I'm Pugsley, your pug expert. Whether you're thinking about adopting a pug or just want to learn more about them, I'm here to help. What's on your mind?",
     },
