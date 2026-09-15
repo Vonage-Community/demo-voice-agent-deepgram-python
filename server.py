@@ -80,7 +80,7 @@ async def socket(vonage_ws: WebSocket, original_uuid: str = Query(None)):
         deepgram_uri = f"wss://{DEEPGRAM_VOICE_AGENT_ENDPOINT}"
         deepgram_headers = {"Authorization": f"token {DEEPGRAM_API_KEY}"}
 
-        logger.info("Connecting to Deepgram Voice Agent...")
+        logger.info("Connecting to Deepgram Voice Agent ...")
 
         async with websockets.connect(
             deepgram_uri, additional_headers=deepgram_headers

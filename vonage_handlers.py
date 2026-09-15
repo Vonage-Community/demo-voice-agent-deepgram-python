@@ -1,12 +1,10 @@
 import json
-from vonage import Vonage, Auth
 from vonage_voice import (
     NccoAction,
     Talk,
     Connect,
     WebsocketEndpoint,
 )
-from fastapi.responses import JSONResponse
 from fastapi import WebSocket, WebSocketDisconnect
 import logging
 from config import LogColor
@@ -18,6 +16,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 logger = logging.getLogger(__name__)
+
 
 def build_ncco(host: str, uuid: str, from_: str) -> list:
     """
@@ -47,7 +46,11 @@ def build_ncco(host: str, uuid: str, from_: str) -> list:
     return [action.model_dump(by_alias=True, exclude_none=True) for action in ncco]
 
 
-async def handle_vonage(vonage_ws: WebSocket, deepgram_ws, state: CallState,) -> None:
+async def handle_vonage(
+    vonage_ws: WebSocket,
+    deepgram_ws,
+    state: CallState,
+) -> None:
     """
     Loop 2: Vonage → Deepgram
 
@@ -70,11 +73,19 @@ async def handle_vonage(vonage_ws: WebSocket, deepgram_ws, state: CallState,) ->
                 logger.info(LogColor.wrap(LogColor.CYAN, f"Vonage event: {kind}"))
 
                 if kind == "websocket:connected":
-                    logger.info(LogColor.wrap(LogColor.CYAN,
-                        f"Vonage WebSocket ready | " f"content-type: {evt.get('content-type')}"
-                    ))
+                    logger.info(
+                        LogColor.wrap(
+                            LogColor.CYAN,
+                            f"Vonage WebSocket ready | "
+                            f"content-type: {evt.get('content-type')}",
+                        )
+                    )
                 elif kind == "websocket:cleared":
-                    logger.info(LogColor.wrap(LogColor.RED, "Vonage buffer cleared (barge-in confirmed)"))
+                    logger.info(
+                        LogColor.wrap(
+                            LogColor.RED, "Vonage buffer cleared (barge-in confirmed)"
+                        )
+                    )
 
             elif "bytes" in message:
                 # Raw PCM audio from the caller — forward to Deepgram

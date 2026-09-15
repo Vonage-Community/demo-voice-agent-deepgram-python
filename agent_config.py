@@ -38,11 +38,7 @@ DG_AGENT_SETTINGS = {
                 "IMPORTANT: When the caller responds to 'Is there anything else I can help you with?' "
                 "with ANY negative or closing response — including 'no', 'nope', 'nah', "
                 "'that's all', 'I'm good', 'thanks', 'goodbye', 'bye', 'no thank you', "
-                "'I'm all set', or any similar closing — follow these steps IN ORDER: "
-                "STEP 1: Say exactly one short farewell sentence out loud, such as "
-                "'It was great chatting with you, take care!' or 'Happy to help, goodbye!' "
-                "STEP 2: Call end_call. "
-                "Do NOT skip step 1. Do NOT say more than one sentence. Do NOT call end_call before speaking."
+                "'I'm all set', or any similar closing — immediately call end_call"
             ),
             "functions": [
                 {
@@ -87,7 +83,7 @@ DG_AGENT_SETTINGS = {
                 "type": "deepgram",
                 "model": "flux-cole-en",
                 "version": "v2",
-                "speed": 1.5, 
+                "speed": 1.5,
                 "expressivity": 0,
             },
         },

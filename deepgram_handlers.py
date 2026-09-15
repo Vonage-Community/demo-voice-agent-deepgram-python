@@ -8,7 +8,6 @@ from config import VONAGE_APPLICATION_ID, VONAGE_PRIVATE_KEY_PATH, LogColor
 from call_state import CallState
 from dog_rescue_data import PUG_RESCUES_BY_REGION, DEFAULT_RESCUES
 
-
 # Logging
 logging.basicConfig(
     level=logging.INFO,
@@ -22,7 +21,7 @@ vonage_client = Vonage(
         private_key=VONAGE_PRIVATE_KEY_PATH,
     )
 )
-vonage_voice = vonage_client.voice
+VONAGE_VOICE = vonage_client.voice
 
 
 async def find_pug_rescues(zip_code: str) -> str:
@@ -40,9 +39,11 @@ async def find_pug_rescues(zip_code: str) -> str:
     ]
     summary = "; ".join(lines)
 
-    pug_rescue_result = f"Great news! I found {len(rescues)} pug rescue organizations near {zip_code}: "
-    f"{summary}. I'd recommend calling ahead — availability changes quickly, "
-    "and they can tell you about any pugs coming in soon too."
+    pug_rescue_result = (
+        f"Great news! I found {len(rescues)} pug rescue organizations near {zip_code}: "
+        f"{summary}. I'd recommend calling ahead — availability changes quickly, "
+        "and they can tell you about any pugs coming in soon too."
+    )
 
     return pug_rescue_result
 
@@ -50,8 +51,6 @@ async def find_pug_rescues(zip_code: str) -> str:
 async def dispatch_function_call(
     fn: dict,
     deepgram_ws,
-    vonage_voice,
-    original_uuid: str,
     state: CallState,
 ) -> None:
     """
@@ -61,7 +60,11 @@ async def dispatch_function_call(
     """
     fn_name = fn.get("name")
     fn_id = fn.get("id")
-    logger.info(LogColor.wrap(LogColor.YELLOW,f"Function call: {fn_name} | args: {fn.get('arguments')}"))
+    logger.info(
+        LogColor.wrap(
+            LogColor.YELLOW, f"Function call: {fn_name} | args: {fn.get('arguments')}"
+        )
+    )
 
     if fn_name == "find_pug_rescues":
         args = json.loads(fn.get("arguments", "{}"))
@@ -70,14 +73,20 @@ async def dispatch_function_call(
         logger.info(f"Rescue lookup result: {result}")
 
     elif fn_name == "end_call":
-        # Defer the FunctionCallResponse until AgentAudioDone fires
-        # Sending it now would trigger a new LLM turn → repeated farewell
         state.ending_call = True
         state.end_call_fn_id = fn_id
-        logger.info(LogColor.wrap(LogColor.YELLOW,
-            "end_call invoked — deferring FunctionCallResponse until AgentAudioDone"
-        ))
-        return  # skip the send below
+        logger.info("end_call invoked — sending FunctionCallResponse immediately")
+        await deepgram_ws.send(
+            json.dumps(
+                {
+                    "type": "FunctionCallResponse",
+                    "id": fn_id,
+                    "name": "end_call",
+                    "content": "Call ended.",
+                }
+            )
+        )
+        return
 
     else:
         result = "Function not implemented."
@@ -123,53 +132,59 @@ async def handle_deepgram(
                 event_type = data.get("type")
                 event_role = data.get("role")
 
-                #Handle color coding logs
+                # Handle color coding logs for demonstration purposes
+                # YELLOW for event types
+                # GREEN for role: assistant logs
+                # MAGENTA for role: user logs
                 if event_type != "LatencyReport":
-                    logger.info(LogColor.wrap(LogColor.YELLOW,f"Deepgram -> event type is {event_type} with data {data}"))
+                    logger.info(
+                        LogColor.wrap(
+                            LogColor.YELLOW,
+                            f"Deepgram -> event type is {event_type}",
+                        )
+                    )
                 if event_role == "assistant":
-                    logger.info(LogColor.wrap(LogColor.GREEN,f"Deepgram -> {data}"))
+                    logger.info(LogColor.wrap(LogColor.GREEN, f"Deepgram -> {data}"))
                 if event_role == "user":
-                    logger.info(LogColor.wrap(LogColor.MAGENTA,f"Deepgram -> {data}"))
+                    logger.info(LogColor.wrap(LogColor.MAGENTA, f"Deepgram -> {data}"))
 
                 if event_type == "UserStartedSpeaking":
                     # Barge-in: caller interrupted the agent mid-response
                     # Tell Vonage to discard its audio buffer immediately
                     await vonage_ws.send_text(json.dumps({"action": "clear"}))
-                    logger.info(LogColor.wrap(LogColor.RED,"CLEAR sent to Vonage (barge-in)"))
+                    logger.info(
+                        LogColor.wrap(LogColor.RED, "CLEAR sent to Vonage (barge-in)")
+                    )
 
                 elif event_type == "AgentAudioDone":
+                    # If the state is ending_call
+                    # and AgentAudioDone has been fired off by Deepgram
+                    # and if the agent has provided a farewell
+                    # then hang up the call
                     if state.ending_call and original_uuid:
-                        logger.info(LogColor.wrap(LogColor.RED, "GOT HERE"))
-                        # Farewell TTS has finished playing
-                        # Send the deferred FunctionCallResponse then hang up
                         state.farewell_complete = True
-                        if state.end_call_fn_id:
-                            await deepgram_ws.send(
-                                json.dumps(
-                                    {
-                                        "type": "FunctionCallResponse",
-                                        "id": state.end_call_fn_id,
-                                        "name": "end_call",
-                                        "content": "Call ended.",
-                                    }
-                                )
+                        logger.info(
+                            LogColor.wrap(
+                                LogColor.RED,
+                                f"AgentAudioDone + ending_call — hanging up | UUID: {original_uuid}",
                             )
-                        logger.info(LogColor.wrap(LogColor.YELLOW,
-                            f"AgentAudioDone + ending_call — hanging up | UUID: {original_uuid}"
-                        ))
+                        )
                         await asyncio.sleep(2)
                         try:
-                            vonage_voice.hangup(original_uuid)
-                            logger.info(f"Call hung up | UUID: {original_uuid}")
+                            VONAGE_VOICE.hangup(original_uuid)
+                            logger.info(
+                                LogColor.wrap(
+                                    LogColor.RED,
+                                    f"Call hung up | UUID: {original_uuid}",
+                                )
+                            )
                         except Exception as exc:
                             logger.error(f"Hangup failed: {exc}")
 
                 elif event_type == "FunctionCallRequest":
                     for fn in data.get("functions", []):
-                        await dispatch_function_call(
-                            fn, deepgram_ws, vonage_voice, original_uuid, state
-                        )
+                        await dispatch_function_call(fn, deepgram_ws, state)
 
     except websockets.exceptions.ConnectionClosed:
-        logger.info("Deepgram WebSocket closed.")
+        logger.info("Deepgram WebSocket closed")
         state.deepgram_websocket_open = False
