@@ -67,7 +67,7 @@ async def handle_vonage(vonage_ws: WebSocket, deepgram_ws, state: CallState,) ->
                 # Control event from Vonage (not audio)
                 evt = json.loads(message["text"])
                 kind = evt.get("event", "")
-                logger.info(LogColor.wrap(LogColor.YELLOW, f"Vonage event: {kind}"))
+                logger.info(LogColor.wrap(LogColor.CYAN, f"Vonage event: {kind}"))
 
                 if kind == "websocket:connected":
                     logger.info(LogColor.wrap(LogColor.CYAN,
@@ -81,7 +81,7 @@ async def handle_vonage(vonage_ws: WebSocket, deepgram_ws, state: CallState,) ->
                 # Once ending_call is set, stop sending caller audio so
                 # Deepgram can't trigger another LLM turn during the
                 # sleep window before hangup
-                if state.deepgram_websocket_open and not state.ending_call:
+                if state.deepgram_websocket_open and not state.farewell_complete:
                     await deepgram_ws.send(message["bytes"])
 
     except WebSocketDisconnect:

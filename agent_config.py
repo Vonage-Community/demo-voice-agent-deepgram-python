@@ -6,18 +6,20 @@
 DG_AGENT_SETTINGS = {
     "type": "Settings",
     "audio": {
-        "input":  {"encoding": "linear16", "sample_rate": 8000},
+        "input": {"encoding": "linear16", "sample_rate": 8000},
         "output": {"encoding": "linear16", "sample_rate": 8000, "container": "none"},
     },
     "agent": {
         "listen": {
-            "provider": {"type": "deepgram", 
-                         "model": "flux-general-en",
-                         "version": "v2"},
+            "provider": {
+                "type": "deepgram",
+                "model": "flux-general-en",
+                "version": "v2",
+            },
         },
         "think": {
             "provider": {
-                "type":  "anthropic",
+                "type": "anthropic",
                 "model": "claude-sonnet-5",
             },
             "prompt": (
@@ -81,9 +83,13 @@ DG_AGENT_SETTINGS = {
             ],
         },
         "speak": {
-            "provider": {"type": "deepgram",
-                         "model": "flux-kit-en",
-                         "version": "v2"},
+            "provider": {
+                "type": "deepgram",
+                "model": "flux-cole-en",
+                "version": "v2",
+                "speed": 1.5, 
+                "expressivity": 0,
+            },
         },
         "greeting": "Hello! I'm Pugsley, your pug expert. Whether you're thinking about adopting a pug or just want to learn more about them, I'm here to help. What's on your mind?",
     },

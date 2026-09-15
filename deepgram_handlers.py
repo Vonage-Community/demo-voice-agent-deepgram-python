@@ -120,14 +120,16 @@ async def handle_deepgram(
 
             else:
                 data = json.loads(message)
-                if data.get("role") == "assistant":
-                    logger.info(LogColor.wrap(LogColor.GREEN,f"Deepgram -> {data}"))
-                elif data.get("role") == "user":
-                    logger.info(LogColor.wrap(LogColor.MAGENTA,f"Deepgram -> {data}"))
-                # else:
-                #     logger.info(f"Deepgram -> {data}")
-
                 event_type = data.get("type")
+                event_role = data.get("role")
+
+                #Handle color coding logs
+                if event_type != "LatencyReport":
+                    logger.info(LogColor.wrap(LogColor.YELLOW,f"Deepgram -> event type is {event_type} with data {data}"))
+                if event_role == "assistant":
+                    logger.info(LogColor.wrap(LogColor.GREEN,f"Deepgram -> {data}"))
+                if event_role == "user":
+                    logger.info(LogColor.wrap(LogColor.MAGENTA,f"Deepgram -> {data}"))
 
                 if event_type == "UserStartedSpeaking":
                     # Barge-in: caller interrupted the agent mid-response
@@ -137,6 +139,7 @@ async def handle_deepgram(
 
                 elif event_type == "AgentAudioDone":
                     if state.ending_call and original_uuid:
+                        logger.info(LogColor.wrap(LogColor.RED, "GOT HERE"))
                         # Farewell TTS has finished playing
                         # Send the deferred FunctionCallResponse then hang up
                         state.farewell_complete = True
