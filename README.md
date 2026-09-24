@@ -82,7 +82,7 @@ pip install -r requirements.txt
 1. Go to [Vonage Dashboard → Applications](https://vonage.dev/4xrc8Nd)
 2. Create a new application and enable **Voice** capability
 3. Click **Generate public and private key** to initiate a download of a file called `private.key`; once downloaded, move it to the project root
-4. Set placeholder webhook URLs for now (you'll update them after starting ngrok)
+4. Set placeholder webhook URLs for now ([you'll update them after starting ngrok](#4-start-ngrok))
 5. Link a Voice capable Vonage number to the application
 
 ### 3. Configure credentials
