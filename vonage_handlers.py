@@ -32,7 +32,7 @@ def build_ncco(host: str, uuid: str, from_: str) -> list:
     """
     ws_uri = f"wss://{host}/socket?original_uuid={uuid}"
 
-    greeting = "Hello, please wait while we connect your call!"
+    greeting = "Hello, thank you for calling the Pug Information Line. Please hold while we connect you with a Pug expert."
 
     websocket_endpoint = WebsocketEndpoint(
         uri=ws_uri, contentType="audio/l16;rate=8000"
