@@ -51,7 +51,7 @@ PUG_RESCUES_BY_REGION: dict[str, list[tuple[str, str, str, str]]] = {
         ("New Mexico Pug Rescue",        "Albuquerque",  "NM", "505-555-0122"),
     ],
     "9": [  # West Coast
-        ("Southern California Pug Rescue","Los Angeles", "CA", "310-555-0175"),
+        ("Pug Nation LA", "Los Angeles", "CA", "310-555-0175"),
         ("NorCal Pug Rescue",            "San Francisco","CA", "415-555-0148"),
         ("Pacific Northwest Pug Rescue", "Seattle",      "WA", "206-555-0131"),
     ],
@@ -59,6 +59,6 @@ PUG_RESCUES_BY_REGION: dict[str, list[tuple[str, str, str, str]]] = {
 
 DEFAULT_RESCUES = [
     ("National Pug Dog Club Rescue",     "Nationwide",   "US", "800-555-0100"),
-    ("Pug Nation Rescue",                "Los Angeles",  "CA", "310-555-0175"),
+    ("Pug Nation LA",                "Los Angeles",  "CA", "310-555-0175"),
     ("Mid-Atlantic Pug Rescue",          "Philadelphia", "PA", "215-555-0147"),
 ]

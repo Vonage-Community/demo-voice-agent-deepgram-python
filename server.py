@@ -56,7 +56,7 @@ async def socket(vonage_ws: WebSocket, original_uuid: str = Query(None)):
     This is the core of the demo. Two WebSocket connections run concurrently:
       - vonage_ws  : the connection Vonage opened to us (caller's audio in,
                      agent audio out)
-      - dg_ws      : the connection we open to Deepgram (caller audio in,
+      - deepgram_ws : the connection we open to Deepgram (caller audio in,
                      agent audio + transcripts out)
 
     Two async loops run in parallel via asyncio.gather():
@@ -72,7 +72,7 @@ async def socket(vonage_ws: WebSocket, original_uuid: str = Query(None)):
         → caller's new speech takes over
     """
     await vonage_ws.accept()
-    logger.info(f"Vonage WS connected | UUID: {original_uuid}")
+    logger.info(f"Vonage WebSocket connected | UUID: {original_uuid}")
 
     state = CallState()
 

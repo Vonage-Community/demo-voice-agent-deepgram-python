@@ -136,6 +136,8 @@ INFO  Deepgram -> {"type": "ConversationText", "role": "user", "content": "shoul
 INFO  Deepgram -> {"type": "ConversationText", "role": "assistant", "content": "Pugs are wonderful companions..."}
 ```
 
+![A funny gif of a pug with human hands trying to eat a cookie that is just out of reach.](lunch-pugs.gif)
+
 ## Resources and References
 
 - [Vonage Applications](https://vonage.dev/4xrc8Nd): Documentation for creating and configuring a Vonage application, including authentication key generation, capability setup, and webhook configuration
@@ -144,8 +146,5 @@ INFO  Deepgram -> {"type": "ConversationText", "role": "assistant", "content": "
 - [A Comprehensive Guide on Working with Python Virtual Environments](https://vonage.dev/42D6eeT): A guide to creating and managing Python virtual environments using `venv` and `virtualenv`, including dependency management with `requirements.txt`
 - [What Are WebSockets and How Are They Different From HTTP?](https://vonage.dev/493ONaY): An explainer on the WebSocket protocol, how it differs from HTTP, and how Vonage uses WebSocket connections in the Voice API for real-time audio streaming
 - [AI Voice Agent with Deepgram | Vonage API Documentation](https://developer.vonage.com/en/voice/voice-api/guides/voice-ai-agent-deepgram): Step-by-step guide for building a real-time AI voice agent using the Vonage Voice API and Deepgram's Voice Agent platform, with support for barge-in and live transcription
-- [WebSocket Voice Chat API Guide | Vonage API Documentation](https://developer.vonage.com/en/voice/voice-api/concepts/websockets): Conceptual guide to WebSockets in the Vonage Voice API, including binary vs. JSON message parsing, audio streaming patterns, and connecting to AI engines
-- [Add Tools and Human Transfer to a Vonage + Deepgram Voice Agent](https://developer.vonage.com/en/blog/add-tools-human-transfer-vonage-deepgram-voice-agent): Tutorial extending a basic Vonage + Deepgram voice agent with function calling, timeouts, fallback handling, human call transfer, and call records
 - [Deepgram Voice Agent API — Getting Started](https://developers.deepgram.com/docs/voice-agent): Official Deepgram documentation for building real-time interactive voice agents over a single WebSocket connection, covering STT, LLM integration, TTS, and function calling
-- [Deepgram Voice Agent API — Configure the Voice Agent](https://developers.deepgram.com/docs/configure-voice-agent): Full reference for the `Settings` message sent on WebSocket open, including audio format, ASR model, LLM provider, TTS voice, greeting, and function definitions
-- [Deepgram Voice Agent API — LLM Models](https://developers.deepgram.com/docs/voice-agent-llm-models): Reference for supported LLM providers and models available through Deepgram's managed service, including Anthropic, OpenAI, Google, and Groq
+- [Wikipedia Entry About Pugs](https://en.wikipedia.org/wiki/Pug): Learn all about Pugs on Wikipedia

@@ -110,7 +110,8 @@ async def handle_deepgram(
     state: CallState,
 ) -> None:
     """
-    Loop 1: Deepgram → Vonage.
+    Loop 1: Deepgram → Vonage
+
     Receives messages from Deepgram and reacts:
       - bytes               → forward PCM audio to Vonage (unless farewell is done)
       - UserStartedSpeaking → send CLEAR to Vonage (barge-in)
@@ -136,7 +137,7 @@ async def handle_deepgram(
                 # YELLOW for event types
                 # GREEN for role: assistant logs
                 # MAGENTA for role: user logs
-                if event_type != "LatencyReport":
+                if event_type not in ["LatencyReport", "History"]:
                     logger.info(
                         LogColor.wrap(
                             LogColor.YELLOW,
